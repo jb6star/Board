@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>VariousImp 게시판</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: #f8f9fa; }
+        h1, h2 { color: #333; }
+        input, textarea { width: 100%; padding: 10px; margin: 6px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 15px; margin-top: 10px; border: none; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .post { border: 1px solid #ddd; background: white; padding: 10px; margin-top: 10px; border-radius: 4px; }
+        .form-container { margin-top: 30px; background: #fff; padding: 20px; border-radius: 6px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<h1>VariousImp 게시판</h1>
+
+<div>
+    <h2>🔍 게시글 검색</h2>
+    <input type="text" id="searchKeyword" placeholder="제목 키워드 입력" />
+    <button onclick="searchPosts()">검색</button>
+</div>
+
+<div>
+    <h2>📋 게시글 목록</h2>
+    <div id="post-list"></div>
+    <button onclick="prevPage()">이전</button>
+    <span id="page-info"></span>
+    <button onclick="nextPage()">다음</button>
+</div>
+
+<div class="form-container">
+    <h2>✍ 게시글 작성</h2>
+    <input type="text" id="title" placeholder="제목" />
+    <textarea id="content" placeholder="내용"></textarea>
+    <input type="text" id="author" placeholder="작성자" />
+    <button onclick="createPost()">작성</button>
+</div>
+
+<script>
+    let currentPage = 1;
+    const size = 5;
+
+    function loadPosts() {
+        fetch(`/posts?page=${currentPage}&size=${size}`)
+            .then(res => res.json())
+            .then(data => {
+                const postList = data.content.map(p =>
+                    `<div class="post">
+                            <h3>${p.title}</h3>
+                            <p><strong>작성자:</strong> ${p.author}</p>
+                            <button onclick="viewPost(${p.id})">보기</button>
+                            <button onclick="deletePost(${p.id})">삭제</button>
+                        </div>`
+                ).join('');
+                document.getElementById("post-list").innerHTML = postList;
+                document.getElementById("page-info").innerText = `${currentPage} / ${data.totalPages}`;
+            });
+    }
+
+    function createPost() {
+        const title = document.getElementById("title").value;
+        const content = document.getElementById("content").value;
+        const author = document.getElementById("author").value;
+        fetch('/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, content, author })
+        }).then(() => {
+            alert("작성 완료!");
+            loadPosts();
+        });
+    }
+
+    function viewPost(id) {
+        window.location.href = `/view.html?id=${id}`;
+    }
+
+    function deletePost(id) {
+        fetch(`/posts/${id}`, {
+            method: 'DELETE'
+        }).then(() => {
+            alert("삭제 완료!");
+            loadPosts();
+        });
+    }
+
+    function searchPosts() {
+        const keyword = document.getElementById("searchKeyword").value;
+        fetch(`/posts/search?keyword=${encodeURIComponent(keyword)}&page=1&size=5`)
+            .then(res => res.json())
+            .then(data => {
+                const results = data.titles.map(t =>
+                    `<div class="post"><p>${t}</p></div>`
+                ).join('');
+                document.getElementById("post-list").innerHTML = results;
+                document.getElementById("page-info").innerText = `검색 결과 페이지: ${data.currentPage} / ${data.totalPages}`;
+            });
+    }
+
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadPosts();
+        }
+    }
+
+    function nextPage() {
+        currentPage++;
+        loadPosts();
+    }
+
+    loadPosts();
+</script>
+</body>
+</html>

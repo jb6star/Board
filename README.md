@@ -35,6 +35,7 @@ src/
 - Spring Security + JWT를 통한 로그인 기능 개발
 - 실제 DB(MySQL)로 전환하여 배포 환경 구성
 - CI/CD, Docker 등 DevOps 환경 실습
+- FE와의 협업
 
 🙋‍♂️ 개발자 정보
 이름: 윤준성
